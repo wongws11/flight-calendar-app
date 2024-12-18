@@ -1,17 +1,10 @@
 import React from "react";
 import { Autocomplete, TextField } from "@mui/material";
-
-const airports = [
-	{ code: "JFK", name: "John F. Kennedy International Airport" },
-	{ code: "LAX", name: "Los Angeles International Airport" },
-	{ code: "ORD", name: "O'Hare International Airport" },
-	{ code: "ATL", name: "Hartsfield–Jackson Atlanta International Airport" },
-	// Add more airports as needed
-];
+import { Airport, airports } from "../data/airports";
 
 type AirportAutocompleteProps = {
 	label: string;
-	onChange: (value: string | null) => void;
+	onChange: (value: Airport | null) => void;
 };
 
 const AirportAutocomplete: React.FC<AirportAutocompleteProps> = ({
@@ -21,8 +14,8 @@ const AirportAutocomplete: React.FC<AirportAutocompleteProps> = ({
 	return (
 		<Autocomplete
 			options={airports}
-			getOptionLabel={(option) => `${option.code} - ${option.name}`}
-			onChange={(_event, value) => onChange(value ? value.code : null)}
+			getOptionLabel={(option) => `${option.iata} - ${option.name}`}
+			onChange={(_event, value) => onChange(value || null)}
 			renderInput={(params) => (
 				<TextField {...params} label={label} variant="outlined" />
 			)}
