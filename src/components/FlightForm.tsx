@@ -41,6 +41,7 @@ const FlightForm: React.FC = () => {
 	const [arrivalTime, setArrivalTime] = useState<string>(
 		dayjs().add(1, "hour").format().slice(0, 16)
 	);
+	const [flightNumber, setFlightNumber] = useState<string>("");
 
 	const handleGenerateICS = () => {
 		if (
@@ -53,11 +54,14 @@ const FlightForm: React.FC = () => {
 			return;
 		}
 
+		const eventTitle = flightNumber
+			? `Flight ${flightNumber} from ${departureAirport.name} to ${arrivalAirport.name}`
+			: `Flight from ${departureAirport.name} to ${arrivalAirport.name}`;
+
 		const event = {
 			start: dateToEvent(departureTime, departureAirport.tz),
 			end: dateToEvent(arrivalTime, arrivalAirport.tz),
-			title: `Flight from ${departureAirport.name} to ${arrivalAirport.name}`,
-			description: `Flight details:\nDeparture: ${departureAirport.name}\nArrival: ${arrivalAirport.name}`,
+			title: eventTitle,
 			location: `From ${departureAirport.name} to ${arrivalAirport.name}`,
 		};
 
@@ -101,6 +105,12 @@ const FlightForm: React.FC = () => {
 				InputLabelProps={{ shrink: true }}
 				defaultValue={dayjs().add(1, "hour").format().slice(0, 16)}
 				onChange={(e) => setArrivalTime(e.target.value)}
+			/>
+			<TextField
+				label="Flight Number (optional)"
+				type="text"
+				value={flightNumber}
+				onChange={(e) => setFlightNumber(e.target.value)}
 			/>
 			<Button
 				variant="contained"
