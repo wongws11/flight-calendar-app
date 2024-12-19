@@ -18,4 +18,6 @@ Wee single page web app to create a ics calendar file for a flight itinerary. Ha
 Don't think I will be adding any more features to this. But won't hurt to write a wishlist. Let me know if you want anything added. 
 
 - [ ] Suuport output for Google Calendar and Outlook
+- [ ] Support custom event name and description
+- [ ] Support flight number inputs
 - [ ] Prevent user time travel
