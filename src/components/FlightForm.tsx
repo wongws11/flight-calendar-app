@@ -35,11 +35,14 @@ const FlightForm: React.FC = () => {
 		null
 	);
 	const [arrivalAirport, setArrivalAirport] = useState<Airport | null>(null);
-	const [departureTime, setDepartureTime] = useState<string>("");
-	const [arrivalTime, setArrivalTime] = useState<string>("");
+	const [departureTime, setDepartureTime] = useState<string>(
+		dayjs().format().slice(0, 16)
+	);
+	const [arrivalTime, setArrivalTime] = useState<string>(
+		dayjs().add(1, "hour").format().slice(0, 16)
+	);
 
 	const handleGenerateICS = () => {
-		console.log(departureAirport, arrivalAirport, departureTime, arrivalTime);
 		if (
 			!departureAirport ||
 			!arrivalAirport ||
@@ -72,6 +75,9 @@ const FlightForm: React.FC = () => {
 		});
 	};
 
+	const allInputsReady =
+		departureAirport && arrivalAirport && departureTime && arrivalTime;
+
 	return (
 		<Stack spacing={2} width="400px" margin="auto" mt={5}>
 			<AirportAutocomplete
@@ -82,6 +88,7 @@ const FlightForm: React.FC = () => {
 				label="Departure Time"
 				type="datetime-local"
 				InputLabelProps={{ shrink: true }}
+				defaultValue={dayjs().format().slice(0, 16)}
 				onChange={(e) => setDepartureTime(e.target.value)}
 			/>
 			<AirportAutocomplete
@@ -92,10 +99,16 @@ const FlightForm: React.FC = () => {
 				label="Arrival Time"
 				type="datetime-local"
 				InputLabelProps={{ shrink: true }}
+				defaultValue={dayjs().add(1, "hour").format().slice(0, 16)}
 				onChange={(e) => setArrivalTime(e.target.value)}
 			/>
-			<Button variant="contained" color="primary" onClick={handleGenerateICS}>
-				Generate ICS File
+			<Button
+				variant="contained"
+				color="primary"
+				disabled={!allInputsReady}
+				onClick={handleGenerateICS}
+			>
+				Generate ICS
 			</Button>
 		</Stack>
 	);
