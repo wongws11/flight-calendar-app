@@ -83,7 +83,7 @@ const FlightForm: React.FC = () => {
 		departureAirport && arrivalAirport && departureTime && arrivalTime;
 
 	return (
-		<Stack spacing={2} width="400px" margin="auto" mt={5}>
+		<Stack spacing={2} marginX={1} width="400px" margin="auto" mt={5}>
 			<AirportAutocomplete
 				label="Departure Airport"
 				onChange={setDepartureAirport}
