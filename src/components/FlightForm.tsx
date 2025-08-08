@@ -55,7 +55,7 @@ const FlightForm: React.FC = () => {
 		departureAirport && arrivalAirport && departureTime && arrivalTime;
 
 	return (
-		<Stack spacing={2} paddingX={1} maxWidth="400px" margin="auto" mt={5}>
+		<Stack spacing={3}>
 			<AirportAutocomplete
 				label="Departure Airport"
 				onChange={setDepartureAirport}
@@ -66,6 +66,7 @@ const FlightForm: React.FC = () => {
 				InputLabelProps={{ shrink: true }}
 				defaultValue={dayjs().format().slice(0, 16)}
 				onChange={(e) => setDepartureTime(e.target.value)}
+				fullWidth
 			/>
 			<AirportAutocomplete
 				label="Arrival Airport"
@@ -77,20 +78,31 @@ const FlightForm: React.FC = () => {
 				InputLabelProps={{ shrink: true }}
 				defaultValue={dayjs().add(1, "hour").format().slice(0, 16)}
 				onChange={(e) => setArrivalTime(e.target.value)}
+				fullWidth
 			/>
 			<TextField
 				label="Flight Number (optional)"
 				type="text"
 				value={flightNumber}
 				onChange={(e) => setFlightNumber(e.target.value)}
+				fullWidth
 			/>
 			<Button
 				variant="contained"
 				color="primary"
 				disabled={!allInputsReady}
 				onClick={handleGenerateICS}
+				size="large"
+				sx={{ 
+					mt: 2, 
+					py: 1.5,
+					borderRadius: 2,
+					textTransform: 'none',
+					fontSize: '1.1rem',
+					fontWeight: 600
+				}}
 			>
-				Generate ICS
+				Generate ICS File
 			</Button>
 		</Stack>
 	);
