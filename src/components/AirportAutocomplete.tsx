@@ -1,47 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Autocomplete, TextField } from "@mui/material";
 import { Airport, airports } from "../data/airports";
 
 type AirportAutocompleteProps = {
 	label: string;
+	value: Airport | null;
 	onChange: (value: Airport | null) => void;
 };
 
 const AirportAutocomplete: React.FC<AirportAutocompleteProps> = ({
 	label,
+	value,
 	onChange,
 }) => {
-	const [options, setOptions] = useState<Airport[]>([]);
+	const [inputValue, setInputValue] = useState<string>("");
 
-	const filterAirports = (input: string) => {
-		if (input.length < 3) {
-			setOptions([]);
-			return;
+	const filterAirports = useCallback((input: string): Airport[] => {
+		if (input.length < 2) {
+			return [];
 		}
 
-		const filteredAirports = airports.reduce<Airport[]>((acc, cur) => {
-			if (cur.iata === input.toUpperCase()) {
-				return [...acc, cur];
-			}
-			if (cur.name.toLowerCase().includes(input.toLowerCase())) {
-				return [...acc, cur];
-			}
-			return acc;
-		}, []);
-		setOptions(filteredAirports);
-	};
+		const upperInput = input.toUpperCase();
+		const lowerInput = input.toLowerCase();
+
+		return airports.filter(
+			(airport) =>
+				airport.iata === upperInput ||
+				airport.name.toLowerCase().includes(lowerInput)
+		);
+	}, []);
+
+	const filteredOptions = useMemo(
+		() => filterAirports(inputValue),
+		[inputValue, filterAirports]
+	);
 
 	return (
 		<Autocomplete
-			options={options}
+			options={filteredOptions}
 			getOptionLabel={(option) => `${option.iata} - ${option.name}`}
-			onChange={(_e, value) => onChange(value || null)}
+			value={value}
+			onChange={(_e, selectedValue) => onChange(selectedValue || null)}
+			inputValue={inputValue}
+			onInputChange={(_e, newInputValue) => {
+				setInputValue(newInputValue);
+			}}
 			renderInput={(params) => (
 				<TextField {...params} label={label} variant="outlined" />
 			)}
-			onInputChange={(_e, value) => {
-				filterAirports(value);
-			}}
+			noOptionsText="Type at least 2 characters to search"
 		/>
 	);
 };

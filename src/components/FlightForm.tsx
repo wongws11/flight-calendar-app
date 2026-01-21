@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { TextField, Button, Stack } from "@mui/material";
+import React, { useState, useMemo, useCallback } from "react";
+import { TextField, Button, Stack, Alert, Box } from "@mui/material";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -12,71 +13,105 @@ dayjs.extend(toArray);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const DEFAULT_DEPARTURE_TIME = dayjs().format().slice(0, 16);
+const DEFAULT_ARRIVAL_TIME = dayjs().add(1, "hour").format().slice(0, 16);
+
 const FlightForm: React.FC = () => {
 	const [departureAirport, setDepartureAirport] = useState<Airport | null>(
 		null
 	);
 	const [arrivalAirport, setArrivalAirport] = useState<Airport | null>(null);
 	const [departureTime, setDepartureTime] = useState<string>(
-		dayjs().format().slice(0, 16)
+		DEFAULT_DEPARTURE_TIME
 	);
 	const [arrivalTime, setArrivalTime] = useState<string>(
-		dayjs().add(1, "hour").format().slice(0, 16)
+		DEFAULT_ARRIVAL_TIME
 	);
 	const [flightNumber, setFlightNumber] = useState<string>("");
+	const [error, setError] = useState<string>("");
 
-	const handleGenerateICS = () => {
-		if (
-			!departureAirport ||
-			!arrivalAirport ||
-			!departureTime ||
-			!arrivalTime
-		) {
-			alert("Please fill in all fields");
+	const isFormValid = useMemo(
+		() =>
+			departureAirport &&
+			arrivalAirport &&
+			departureTime &&
+			arrivalTime &&
+			dayjs(departureTime).isBefore(dayjs(arrivalTime)),
+		[departureAirport, arrivalAirport, departureTime, arrivalTime]
+	);
+
+	const handleGenerateICS = useCallback(() => {
+		setError("");
+
+		if (!isFormValid) {
+			setError("Please fill in all fields and ensure departure is before arrival");
 			return;
 		}
 
-		const eventTitle = flightNumber
-			? `Flight ${flightNumber} from ${departureAirport.name} to ${arrivalAirport.name}`
-			: `Flight from ${departureAirport.name} to ${arrivalAirport.name}`;
+		try {
+			const eventTitle = flightNumber
+				? `Flight ${flightNumber} from ${departureAirport!.iata} to ${arrivalAirport!.iata}`
+				: `Flight from ${departureAirport!.iata} to ${arrivalAirport!.iata}`;
 
-		const icsEvent: ICSEvent = {
-			start: dayjs.tz(departureTime, "UTC").toDate(),
-			end: dayjs.tz(arrivalTime, "UTC").toDate(),
-			startTz: departureAirport.tz,
-			endTz: arrivalAirport.tz,
-			title: eventTitle,
-		};
+			const icsEvent: ICSEvent = {
+				start: dayjs.tz(departureTime, departureAirport!.tz).toDate(),
+				end: dayjs.tz(arrivalTime, arrivalAirport!.tz).toDate(),
+				startTz: departureAirport!.tz,
+				endTz: arrivalAirport!.tz,
+				title: eventTitle,
+			};
 
-		createICSFile(icsEvent);
-	};
+			createICSFile(icsEvent);
+			setError("");
+		} catch (err) {
+			setError(`Failed to generate ICS file: ${err instanceof Error ? err.message : "Unknown error"}`);
+		}
+	}, [isFormValid, flightNumber, departureAirport, arrivalAirport, departureTime, arrivalTime]);
 
-	const allInputsReady =
-		departureAirport && arrivalAirport && departureTime && arrivalTime;
+	const handleSwapAirports = useCallback(() => {
+		const temp = departureAirport;
+		setDepartureAirport(arrivalAirport);
+		setArrivalAirport(temp);
+	}, [departureAirport, arrivalAirport]);
 
 	return (
 		<Stack spacing={3}>
+			{error && <Alert severity="error">{error}</Alert>}
 			<AirportAutocomplete
 				label="Departure Airport"
+				value={departureAirport}
 				onChange={setDepartureAirport}
 			/>
 			<TextField
 				label="Departure Time"
 				type="datetime-local"
 				InputLabelProps={{ shrink: true }}
-				defaultValue={dayjs().format().slice(0, 16)}
+				value={departureTime}
 				onChange={(e) => setDepartureTime(e.target.value)}
 				fullWidth
 			/>
+			<Box display="flex" justifyContent="center">
+				<Button
+					variant="outlined"
+					size="small"
+					onClick={handleSwapAirports}
+					disabled={!departureAirport || !arrivalAirport}
+					startIcon={<SwapVertIcon />}
+					sx={{ textTransform: "none" }}
+				>
+					Swap Airports
+				</Button>
+			</Box>
 			<AirportAutocomplete
 				label="Arrival Airport"
+				value={arrivalAirport}
 				onChange={setArrivalAirport}
 			/>
 			<TextField
 				label="Arrival Time"
 				type="datetime-local"
 				InputLabelProps={{ shrink: true }}
-				defaultValue={dayjs().add(1, "hour").format().slice(0, 16)}
+				value={arrivalTime}
 				onChange={(e) => setArrivalTime(e.target.value)}
 				fullWidth
 			/>
@@ -90,16 +125,16 @@ const FlightForm: React.FC = () => {
 			<Button
 				variant="contained"
 				color="primary"
-				disabled={!allInputsReady}
+				disabled={!isFormValid}
 				onClick={handleGenerateICS}
 				size="large"
-				sx={{ 
-					mt: 2, 
+				sx={{
+					mt: 2,
 					py: 1.5,
 					borderRadius: 2,
-					textTransform: 'none',
-					fontSize: '1.1rem',
-					fontWeight: 600
+					textTransform: "none",
+					fontSize: "1.1rem",
+					fontWeight: 600,
 				}}
 			>
 				Generate ICS File
